@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Netwatch by CognoSpace</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--red:#E50914;--black:#141414;--dark:#1a1a1a;--muted:#808080;}
+body{background:var(--black);color:#e5e5e5;font-family:'Nunito',sans-serif;overflow-x:hidden;}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:#000;}
+::-webkit-scrollbar-thumb{background:var(--red);border-radius:3px;}
+input[type=range]{-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--red);cursor:pointer;box-shadow:0 0 8px rgba(229,9,20,.6);}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.screen{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;}
+.card{background:rgba(20,20,20,.97);border:1px solid rgba(229,9,20,.25);border-radius:16px;padding:44px 52px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.8);}
+.btn-red{background:var(--red);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-weight:800;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:1.5px;}
+.btn-red:hover{background:#b20710;}
+.field{width:100%;padding:15px 18px;background:#333;border:1px solid #444;border-radius:8px;color:#fff;font-size:15px;font-family:'Nunito',sans-serif;outline:none;transition:border .2s;display:block;}
+.field:focus{border-color:var(--red);}
+.error-box{display:none;background:rgba(229,9,20,.15);border:1px solid rgba(229,9,20,.4);color:#ff6b6b;padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:18px;}
+.logo{font-family:'Bebas Neue',sans-serif;color:var(--red);letter-spacing:3px;}
+.logo-sub{font-size:12px;color:var(--muted);letter-spacing:5px;}
+.movie-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
+.movie-card{position:relative;border-radius:10px;overflow:hidden;background:#1a1a1a;cursor:pointer;transition:transform .3s,box-shadow .3s;box-shadow:0 4px 20px rgba(0,0,0,.5);}
+.movie-card:hover{transform:scale(1.05);box-shadow:0 12px 40px rgba(0,0,0,.8);}
+.movie-card:hover .card-overlay{opacity:1!important;}
+.card-poster{position:relative;aspect-ratio:2/3;overflow:hidden;background:#0d0d0d;}
+.card-poster img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;}
+.card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.95) 0%,rgba(0,0,0,.4) 60%,transparent 100%);opacity:0;transition:opacity .3s;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;}
+.poster-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;text-align:center;background:linear-gradient(135deg,#1a0000,#2a0505);}
+.fb-badge{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.5);}
+.fb-buttons{display:flex;gap:6px;padding:8px;background:#1a1a1a;}
+.fb-btn{flex:1;padding:8px 4px;border-radius:6px;cursor:pointer;font-size:18px;transition:all .2s;border:2px solid #333;background:transparent;color:#999;}
+.fb-btn:hover{transform:scale(1.08);}
+.card-info{padding:10px 10px 12px;}
+.section-row{padding:40px 5%;background:var(--black);}
+.section-header{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
+.section-bar{width:4px;border-radius:2px;}
+/* HERO */
+#heroSection{position:relative;height:100vh;overflow:hidden;background:#000;}
+#heroSlides{position:absolute;inset:0;}
+#heroSlides img{width:100%;height:100%;object-fit:cover;transition:opacity .8s;}
+.hero-grad-side{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,.85) 0%,rgba(0,0,0,.3) 60%,transparent 100%);z-index:2;}
+.hero-grad-bottom{position:absolute;bottom:0;left:0;right:0;height:200px;background:linear-gradient(to top,var(--black),transparent);z-index:2;}
+#heroContent{position:absolute;bottom:15%;left:5%;z-index:3;max-width:560px;animation:fadeInUp .8s ease;}
+#heroDots{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);z-index:4;display:flex;gap:10px;}
+.hero-dot{height:10px;border-radius:5px;cursor:pointer;transition:all .4s;}
+.hero-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:4;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.3);color:#fff;width:50px;height:50px;border-radius:50%;font-size:20px;cursor:pointer;transition:all .2s;}
+.hero-arrow:hover{background:rgba(229,9,20,.8);}
+/* NAVBAR */
+#navbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:linear-gradient(to bottom,rgba(0,0,0,.95),transparent);padding:16px 5%;display:flex;align-items:center;justify-content:space-between;transition:background .3s;}
+.nav-link{color:#e5e5e5;text-decoration:none;font-size:14px;font-weight:600;transition:color .2s;}
+.nav-link:hover{color:#fff;}
+/* MODAL */
+#movieModal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);overflow-y:auto;}
+#modalInner{max-width:900px;margin:60px auto;padding:20px;position:relative;}
+#modalContent{background:#181818;border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.9);}
+.modal-close{position:fixed;top:20px;right:20px;background:rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.2);color:#fff;width:44px;height:44px;border-radius:50%;font-size:20px;cursor:pointer;z-index:10000;transition:all .2s;}
+.modal-close:hover{background:var(--red);}
+/* POPUP */
+.popup{display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.85);align-items:center;justify-content:center;}
+.popup-box{background:#1a1a1a;border:1px solid rgba(229,9,20,.3);border-radius:20px;padding:50px 60px;max-width:480px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.8);}
+/* FOOTER */
+footer{background:#0a0a0a;border-top:1px solid #1f1f1f;padding:60px 5% 40px;}
+.footer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:40px;margin-bottom:50px;}
+.footer-link{color:var(--muted);text-decoration:none;font-size:13px;display:block;margin-bottom:10px;transition:color .2s;}
+.footer-link:hover{color:#fff;}
+</style>
+</head>
+<body>
+
+<!-- ===== SETUP SCREEN ===== -->
+<div id="setupScreen" class="screen" style="background:linear-gradient(135deg,#000,#1a0000,#000);display:flex;">
+  <div style="text-align:center;margin-bottom:50px;">
+    <h1 class="logo" style="font-size:clamp(48px,10vw,90px);line-height:1;text-shadow:0 0 40px rgba(229,9,20,.5);">NETWATCH</h1>
+    <p class="logo-sub">by CognoSpace</p>
+    <div style="height:3px;width:120px;background:var(--red);margin:16px auto 0;border-radius:2px;box-shadow:0 0 12px var(--red);"></div>
+  </div>
+  <div class="card" style="max-width:560px;padding:50px 60px;">
+    <h2 style="font-size:28px;font-weight:800;margin-bottom:8px;">Welcome to Netwatch!</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:36px;line-height:1.6;">This activity shows you how AI learns your movie preferences — just like Netflix does! Let's set up how many users will participate.</p>
+    <label style="display:block;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--red);margin-bottom:16px;">Number of Users</label>
+    <div style="display:flex;align-items:center;gap:20px;margin-bottom:12px;">
+      <input type="range" id="userCountSlider" min="1" max="10" value="1"
+        style="flex:1;background:linear-gradient(to right,var(--red) 10%,#333 10%);"
+        oninput="updateSlider(this)"/>
+      <div id="sliderVal" style="background:var(--red);color:#fff;font-size:28px;font-weight:900;width:60px;height:60px;border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(229,9,20,.5);flex-shrink:0;">1</div>
+    </div>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:40px;">1 to 10 users can participate in this session</p>
+    <button class="btn-red" onclick="startSetup()" style="width:100%;padding:18px;font-size:17px;">Let's Get Started →</button>
+  </div>
+</div>
+
+<!-- ===== ACCOUNT CREATION SCREEN ===== -->
+<div id="accountScreen" class="screen" style="background:linear-gradient(135deg,#000,#0a0010,#000);">
+  <div style="text-align:center;margin-bottom:40px;">
+    <h1 class="logo" style="font-size:50px;">NETWATCH</h1>
+    <p class="logo-sub">by CognoSpace</p>
+  </div>
+  <div class="card">
+    <div id="accountFormInner"></div>
+  </div>
+  <div id="accountProgress" style="margin-top:28px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;"></div>
+</div>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen" class="screen" style="background:linear-gradient(135deg,#000,#120000,#000);">
+  <div style="text-align:center;margin-bottom:40px;">
+    <h1 class="logo" style="font-size:60px;text-shadow:0 0 30px rgba(229,9,20,.4);">NETWATCH</h1>
+    <p class="logo-sub">by CognoSpace</p>
+  </div>
+  <div class="card" style="max-width:460px;">
+    <h2 style="font-size:26px;font-weight:800;margin-bottom:6px;">Sign In</h2>
+    <p id="loginSubtitle" style="color:var(--muted);font-size:13px;margin-bottom:32px;"></p>
+    <div id="loginError" class="error-box"></div>
+    <input id="loginUser" type="text" placeholder="Username" class="field" style="margin-bottom:14px;"/>
+    <input id="loginPass" type="password" placeholder="Password" class="field" style="margin-bottom:24px;" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="btn-red" onclick="doLogin()" style="width:100%;padding:16px;font-size:16px;">Sign In</button>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="mainApp" style="display:none;">
+
+  <!-- NAVBAR -->
+  <nav id="navbar">
+    <div style="display:flex;align-items:center;gap:40px;">
+      <h1 class="logo" style="font-size:36px;cursor:pointer;text-shadow:0 0 20px rgba(229,9,20,.4);" onclick="scrollToTop()">NETWATCH</h1>
+      <div style="display:flex;gap:20px;">
+        <a href="#" class="nav-link" onclick="showSection('home');return false;">Home</a>
+        <a href="#" class="nav-link" onclick="showSection('movies');return false;">Movies</a>
+        <a href="#" class="nav-link" onclick="showSection('mylist');return false;">My List</a>
+        <a href="#" class="nav-link" onclick="showSection('discover');return false;">Discover</a>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);padding:8px 16px;border-radius:24px;border:1px solid rgba(255,255,255,.12);">
+        <div id="navAvatar" style="width:32px;height:32px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;"></div>
+        <span id="navUsername" style="font-size:14px;font-weight:700;color:#fff;"></span>
+      </div>
+      <button onclick="doLogout()" style="background:transparent;border:1px solid rgba(229,9,20,.5);color:var(--red);padding:8px 18px;border-radius:6px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='var(--red)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--red)'">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- HOME SECTION -->
+  <div id="homeSection">
+    <!-- HERO -->
+    <div id="heroSection">
+      <div id="heroSlides"></div>
+      <div class="hero-grad-side"></div>
+      <div class="hero-grad-bottom"></div>
+      <div id="heroContent"></div>
+      <div id="heroDots"></div>
+      <button class="hero-arrow" id="heroPrev" onclick="changeHero(-1)" style="left:2%;">&#8249;</button>
+      <button class="hero-arrow" id="heroNext" onclick="changeHero(1)" style="right:2%;">&#8250;</button>
+    </div>
+
+    <!-- RECOMMENDED ROW -->
+    <div class="section-row" id="recommendedSection">
+      <div class="section-header">
+        <div class="section-bar" style="height:28px;background:var(--red);"></div>
+        <h2 style="font-size:22px;font-weight:800;color:#fff;">&#127919; Recommended For You</h2>
+        <span style="background:rgba(229,9,20,.2);color:var(--red);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(229,9,20,.4);text-transform:uppercase;letter-spacing:1px;">AI Picks</span>
+      </div>
+      <div id="recGrid" class="movie-grid"></div>
+    </div>
+
+    <!-- MORE TO EXPLORE -->
+    <div id="allMoviesSection" style="padding:0 5% 40px;background:var(--black);display:none;">
+      <div class="section-header">
+        <div class="section-bar" style="height:28px;background:#666;"></div>
+        <h2 style="font-size:22px;font-weight:800;color:#fff;">&#127871; More to Explore</h2>
+      </div>
+      <div id="allMoviesGrid" class="movie-grid"></div>
+    </div>
+  </div>
+
+  <!-- DISCOVER / FEEDBACK SECTION -->
+  <div id="discoverSection" style="display:none;padding:100px 5% 60px;background:var(--black);">
+    <div class="section-header">
+      <div class="section-bar" style="height:28px;background:var(--red);"></div>
+      <h2 style="font-size:24px;font-weight:800;">Rate These Movies</h2>
+    </div>
+    <p id="discoverSubtitle" style="color:var(--muted);font-size:14px;margin-bottom:32px;margin-left:20px;"></p>
+    <div id="discoverGrid" class="movie-grid"></div>
+  </div>
+
+  <!-- MY LIST SECTION -->
+  <div id="mylistSection" style="display:none;padding:100px 5% 60px;background:var(--black);">
+    <div class="section-header">
+      <div class="section-bar" style="height:28px;background:var(--red);"></div>
+      <h2 style="font-size:24px;font-weight:800;">My List</h2>
+    </div>
+    <div id="mylistGrid" class="movie-grid"></div>
+    <p id="mylistEmpty" style="color:var(--muted);font-size:15px;display:none;">Your list is empty. Add movies from any movie popup!</p>
+  </div>
+
+  <!-- ALL MOVIES SECTION -->
+  <div id="moviesSection" style="display:none;padding:100px 5% 60px;background:var(--black);">
+    <div class="section-header">
+      <div class="section-bar" style="height:28px;background:var(--red);"></div>
+      <h2 style="font-size:24px;font-weight:800;">All Movies</h2>
+    </div>
+    <div id="moviesGrid" class="movie-grid"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div style="max-width:1200px;margin:0 auto;">
+      <div class="footer-grid">
+        <div>
+          <h3 class="logo" style="font-size:36px;margin-bottom:12px;">NETWATCH</h3>
+          <p style="color:var(--muted);font-size:13px;line-height:1.8;">An educational AI activity platform helping students understand how recommendation systems work — just like real streaming services!</p>
+        </div>
+        <div>
+          <h4 style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#fff;margin-bottom:16px;">Navigation</h4>
+          <a href="#" class="footer-link" onclick="showSection('home');return false;">Home</a>
+          <a href="#" class="footer-link" onclick="showSection('movies');return false;">Movies</a>
+          <a href="#" class="footer-link" onclick="showSection('mylist');return false;">My List</a>
+          <a href="#" class="footer-link" onclick="showSection('discover');return false;">Discover</a>
+        </div>
+        <div>
+          <h4 style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#fff;margin-bottom:16px;">About This Activity</h4>
+          <p style="color:var(--muted);font-size:13px;line-height:1.8;">Watch movies, rate them, and see how AI learns your taste! Part of the CognoSpace STEAM curriculum.</p>
+        </div>
+        <div>
+          <h4 style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#fff;margin-bottom:16px;">How It Works</h4>
+          <p style="color:var(--muted);font-size:13px;line-height:2;">1. Create your profile<br>2. Rate 20 movies<br>3. AI learns your taste<br>4. Get personalised picks!</p>
+        </div>
+      </div>
+      <div style="border-top:1px solid #1f1f1f;padding-top:30px;text-align:center;">
+        <p style="color:var(--muted);font-size:13px;">&#169; 2026 <span style="color:var(--red);font-weight:700;">Netwatch</span> &mdash; Designed and developed by <span style="color:var(--red);font-weight:700;">CognoSpace</span> &middot; Experiential STEAM Learning</p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ===== MOVIE MODAL ===== -->
+<div id="movieModal">
+  <div id="modalInner">
+    <button class="modal-close" onclick="closeModal()">&#10005;</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ===== NEXT USER POPUP ===== -->
+<div id="nextUserPopup" class="popup">
+  <div class="popup-box">
+    <div style="font-size:56px;margin-bottom:20px;">&#127881;</div>
+    <h2 style="font-size:26px;font-weight:800;margin-bottom:12px;" id="nextUserTitle"></h2>
+    <p style="color:var(--muted);font-size:15px;line-height:1.6;margin-bottom:36px;" id="nextUserMsg"></p>
+    <button id="nextUserBtn" class="btn-red" onclick="goNextUser()" style="padding:16px 40px;font-size:16px;">Continue &#8594;</button>
+  </div>
+</div>
+
+<!-- ===== ALL DONE POPUP ===== -->
+<div id="allDonePopup" class="popup">
+  <div class="popup-box" style="max-width:520px;">
+    <div style="font-size:60px;margin-bottom:20px;">&#129302;</div>
+    <h2 style="font-size:28px;font-weight:800;margin-bottom:12px;color:#fff;">AI Training Complete!</h2>
+    <p style="color:var(--muted);font-size:15px;line-height:1.7;margin-bottom:36px;">All users have rated their movies! Netwatch's AI has learned everyone's taste. Each user can now log back in to see personalised recommendations — just like Netflix!</p>
+    <button class="btn-red" onclick="goToLogin()" style="padding:16px 40px;font-size:16px;">Sign In &amp; See Recommendations &#8594;</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// MOVIE DATA
+// ============================================================
+var ALL_MOVIES = [
+  {id:1, title:"Bahubali: The Beginning", lang:"Telugu", genre:"Adventure", year:2015, director:"S.S. Rajamouli", cast:"Prabhas, Rana Daggubati, Anushka Shetty", poster:"posters/bahubali.jpg", video:"videos/bahubali.mp4", desc:"A young man discovers his royal heritage and embarks on a legendary quest to reclaim his kingdom in this grand fantasy adventure.", tags:["action","fantasy","epic"]},
+  {id:2, title:"RRR", lang:"Telugu", genre:"Action", year:2022, director:"S.S. Rajamouli", cast:"N.T. Rama Rao Jr., Ram Charan, Alia Bhatt", poster:"posters/rrr.jpg", video:"videos/rrr.mp4", desc:"Two freedom fighters become unlikely friends and together rise against British rulers in this thrilling action epic.", tags:["action","historical","friendship"]},
+  {id:3, title:"Eega", lang:"Telugu", genre:"Fantasy", year:2012, director:"S.S. Rajamouli", cast:"Nani, Samantha, Sudeep", poster:"posters/eega.jpg", video:"videos/eega.mp4", desc:"A man reincarnated as a tiny housefly seeks justice against the villain who wronged him, in a wildly creative fantasy tale.", tags:["fantasy","comedy","adventure"]},
+  {id:4, title:"Magadheera", lang:"Telugu", genre:"Fantasy", year:2009, director:"S.S. Rajamouli", cast:"Ram Charan, Kajal Aggarwal", poster:"posters/magadheera.jpg", video:"videos/magadheera.mp4", desc:"A modern love story intertwined with an ancient warrior's tale across centuries — breathtaking action and romance.", tags:["fantasy","action","romance"]},
+  {id:5, title:"Jersey", lang:"Telugu", genre:"Sports", year:2019, director:"Gowtam Tinnanuri", cast:"Nani, Shraddha Srinath", poster:"posters/jersey.jpg", video:"videos/jersey.mp4", desc:"A retired cricketer makes a comeback at 36 to fulfil his son's dream of receiving a blue Indian cricket jersey.", tags:["sports","emotional","inspiration"]},
+  {id:6, title:"Ala Vaikunthapurramuloo", lang:"Telugu", genre:"Comedy", year:2020, director:"Trivikram Srinivas", cast:"Allu Arjun, Pooja Hegde", poster:"posters/ala.jpg", video:"videos/ala.mp4", desc:"Two babies swapped at birth grow up in very different families, leading to a hilarious and heartwarming adventure.", tags:["comedy","family","music"]},
+  {id:7, title:"Enthiran", lang:"Tamil", genre:"Sci-Fi", year:2010, director:"S. Shankar", cast:"Rajinikanth, Aishwarya Rai", poster:"posters/enthiran.jpg", video:"videos/enthiran.mp4", desc:"A scientist builds a humanoid robot that develops emotions — with unpredictable and spectacular results.", tags:["sci-fi","action","comedy"]},
+  {id:8, title:"Vikram", lang:"Tamil", genre:"Action", year:2022, director:"Lokesh Kanagaraj", cast:"Kamal Haasan, Vijay Sethupathi, Fahadh Faasil", poster:"posters/vikram.jpg", video:"videos/vikram.mp4", desc:"A determined cop investigates a chain of mysterious murders uncovering a dangerous criminal underworld.", tags:["action","thriller","mystery"]},
+  {id:9, title:"96", lang:"Tamil", genre:"Romance", year:2018, director:"C. Prem Kumar", cast:"Vijay Sethupathi, Trisha Krishnan", poster:"posters/96.jpg", video:"videos/96.mp4", desc:"Two childhood sweethearts reunite after decades, gently revisiting the beautiful bittersweet memories of school days.", tags:["romance","drama","nostalgic"]},
+  {id:10, title:"Soorarai Pottru", lang:"Tamil", genre:"Biographical", year:2020, director:"Sudha Kongara", cast:"Suriya, Aparna Balamurali", poster:"posters/soorarai.jpg", video:"videos/soorarai.mp4", desc:"Inspired by a true story of a man from a small village who dared to dream of making air travel affordable for everyone.", tags:["inspiration","drama","biographical"]},
+  {id:11, title:"Annaatthe", lang:"Tamil", genre:"Family", year:2021, director:"Siva", cast:"Rajinikanth, Nayanthara, Keerthy Suresh", poster:"posters/annaatthe.jpg", video:"videos/annaatthe.mp4", desc:"A loving village elder goes to extraordinary lengths to protect his younger sister's happiness and honour.", tags:["family","action","emotional"]},
+  {id:12, title:"Ponniyin Selvan 1", lang:"Tamil", genre:"Historical", year:2022, director:"Mani Ratnam", cast:"Vikram, Aishwarya Rai, Karthi", poster:"posters/ps1.jpg", video:"videos/ps1.mp4", desc:"A gripping historical epic about power struggles and betrayal within the legendary Chola dynasty of ancient South India.", tags:["historical","action","drama"]},
+  {id:13, title:"Dangal", lang:"Hindi", genre:"Sports", year:2016, director:"Nitesh Tiwari", cast:"Aamir Khan, Fatima Sana Shaikh", poster:"posters/dangal.jpg", video:"videos/dangal.mp4", desc:"A wrestling coach trains his daughters to become world champions, shattering gender barriers and inspiring millions.", tags:["sports","family","inspiration"]},
+  {id:14, title:"Taare Zameen Par", lang:"Hindi", genre:"Drama", year:2007, director:"Aamir Khan", cast:"Darsheel Safary, Aamir Khan", poster:"posters/taare.jpg", video:"videos/taare.mp4", desc:"A dyslexic child finds a compassionate art teacher who recognises his extraordinary talent and helps him shine.", tags:["drama","family","emotional"]},
+  {id:15, title:"Chhichhore", lang:"Hindi", genre:"Comedy", year:2019, director:"Nitesh Tiwari", cast:"Sushant Singh Rajput, Shraddha Kapoor", poster:"posters/chhichhore.jpg", video:"videos/chhichhore.mp4", desc:"Middle-aged friends relive hilarious college memories to teach a young boy that failure is not the end.", tags:["comedy","friendship","inspiration"]},
+  {id:16, title:"Koi Mil Gaya", lang:"Hindi", genre:"Sci-Fi", year:2003, director:"Rakesh Roshan", cast:"Hrithik Roshan, Preity Zinta", poster:"posters/koi.jpg", video:"videos/koi.mp4", desc:"A gentle young man befriends a friendly alien who grants him amazing powers and changes his life forever.", tags:["sci-fi","family","adventure"]},
+  {id:17, title:"Zindagi Na Milegi Dobara", lang:"Hindi", genre:"Adventure", year:2011, director:"Zoya Akhtar", cast:"Hrithik Roshan, Farhan Akhtar, Abhay Deol", poster:"posters/znmd.jpg", video:"videos/znmd.mp4", desc:"Three childhood friends road-trip through Spain, discovering the true meaning of friendship, courage, and second chances.", tags:["adventure","friendship","feel-good"]},
+  {id:18, title:"The Lion King", lang:"English", genre:"Animation", year:1994, director:"Roger Allers & Rob Minkoff", cast:"Matthew Broderick, Jeremy Irons", poster:"posters/lionking.jpg", video:"videos/lionking.mp4", desc:"A young lion prince must find his courage and return to reclaim his kingdom after his father is taken from him.", tags:["animation","family","adventure"]},
+  {id:19, title:"Spider-Man Into the Spider-Verse", lang:"English", genre:"Animation", year:2018, director:"Bob Persichetti, Peter Ramsey", cast:"Shameik Moore, Jake Johnson", poster:"posters/spiderverse.jpg", video:"videos/spiderverse.mp4", desc:"A Brooklyn teen discovers he has spider powers and must team up with heroes from parallel universes to save the world.", tags:["animation","superhero","adventure"]},
+  {id:20, title:"WALL-E", lang:"English", genre:"Animation", year:2008, director:"Andrew Stanton", cast:"Ben Burtt, Elissa Knight", poster:"posters/walle.jpg", video:"videos/walle.mp4", desc:"A small lonely robot left to clean Earth falls in love and embarks on an incredible journey to save humanity's future.", tags:["animation","sci-fi","romance"]},
+  {id:21, title:"Up", lang:"English", genre:"Animation", year:2009, director:"Pete Docter", cast:"Edward Asner, Jordan Nagai", poster:"posters/up.jpg", video:"videos/up.mp4", desc:"An elderly man ties balloons to his house and flies away on the adventure his late wife always dreamed of — with a surprise companion.", tags:["animation","adventure","emotional"]},
+  {id:22, title:"Moana", lang:"English", genre:"Animation", year:2016, director:"Ron Clements, John Musker", cast:"Auli'i Cravalho, Dwayne Johnson", poster:"posters/moana.jpg", video:"videos/moana.mp4", desc:"A brave Pacific Islander teenager sails across a vast ocean, guided by her heart and the call of the waves, to save her island.", tags:["animation","adventure","music"]},
+  {id:23, title:"Encanto", lang:"English", genre:"Animation", year:2021, director:"Byron Howard, Jared Bush", cast:"Stephanie Beatriz, John Leguizamo", poster:"posters/encanto.jpg", video:"videos/encanto.mp4", desc:"A young Colombian girl with no magic power must save her family's enchanted home and discover her own special gift.", tags:["animation","family","music"]},
+  {id:24, title:"Coco", lang:"English", genre:"Animation", year:2017, director:"Lee Unkrich", cast:"Anthony Gonzalez, Gael Garcia Bernal", poster:"posters/coco.jpg", video:"videos/coco.mp4", desc:"A boy magically enters the Land of the Dead and uncovers the beautiful hidden history of his music-loving family.", tags:["animation","family","music"]},
+  {id:25, title:"Ratatouille", lang:"English", genre:"Animation", year:2007, director:"Brad Bird", cast:"Patton Oswalt, Ian Holm", poster:"posters/ratatouille.jpg", video:"videos/ratatouille.mp4", desc:"A talented rat dreams of becoming a gourmet chef in Paris and secretly partners with a young cook to achieve their shared dream.", tags:["animation","comedy","family"]},
+  {id:26, title:"Frozen", lang:"English", genre:"Animation", year:2013, director:"Chris Buck, Jennifer Lee", cast:"Idina Menzel, Kristen Bell", poster:"posters/frozen.jpg", video:"videos/frozen.mp4", desc:"A fearless princess journeys across a frozen kingdom to save her sister, whose icy magic has stopped summer from ever returning.", tags:["animation","family","adventure"]},
+  {id:27, title:"Toy Story", lang:"English", genre:"Animation", year:1995, director:"John Lasseter", cast:"Tom Hanks, Tim Allen", poster:"posters/toystory.jpg", video:"videos/toystory.mp4", desc:"A cowboy doll and a new space-ranger toy must put aside their rivalry and work together to find their way home.", tags:["animation","friendship","adventure"]},
+  {id:28, title:"My Neighbor Totoro", lang:"English", genre:"Animation", year:1988, director:"Hayao Miyazaki", cast:"Noriko Hidaka, Dakota Fanning", poster:"posters/totoro.jpg", video:"videos/totoro.mp4", desc:"Two young sisters discover gentle forest spirits, including the wonderfully fluffy Totoro, while settling into their new countryside home.", tags:["animation","fantasy","family"]},
+  {id:29, title:"KGF Chapter 1", lang:"Kannada", genre:"Action", year:2018, director:"Prashanth Neel", cast:"Yash, Srinidhi Shetty", poster:"posters/kgf1.jpg", video:"videos/kgf1.mp4", desc:"A fierce young man rises from poverty and hardship to rule the legendary gold mines of Kolar, becoming an unstoppable force.", tags:["action","drama","powerful"]},
+  {id:30, title:"Mungaru Male", lang:"Kannada", genre:"Romance", year:2006, director:"Yogaraj Bhat", cast:"Ganesh, Pooja Gandhi", poster:"posters/mungaru.jpg", video:"videos/mungaru.mp4", desc:"A shy young man falls deeply in love but struggles to express his feelings in this beautiful, music-filled romantic tale.", tags:["romance","music","drama"]},
+  {id:31, title:"Drishyam", lang:"Malayalam", genre:"Thriller", year:2013, director:"Jeethu Joseph", cast:"Mohanlal, Meena", poster:"posters/drishyam.jpg", video:"videos/drishyam.mp4", desc:"A devoted father uses his encyclopedic knowledge of movies to craft an airtight plan and outsmart the police at every turn.", tags:["thriller","family","mystery"]},
+  {id:32, title:"Premam", lang:"Malayalam", genre:"Romance", year:2015, director:"Alphonse Puthren", cast:"Nivin Pauly, Sai Pallavi", poster:"posters/premam.jpg", video:"videos/premam.mp4", desc:"A young man experiences the beautiful highs and heartbreaking lows of love across three different chapters of his life.", tags:["romance","drama","feel-good"]},
+  {id:33, title:"Minnal Murali", lang:"Malayalam", genre:"Superhero", year:2021, director:"Basil Paulose", cast:"Tovino Thomas, Guru Somasundaram", poster:"posters/minnal.jpg", video:"videos/minnal.mp4", desc:"A small-town tailor is struck by lightning and gains superpowers, becoming an unlikely local hero in this warm and funny story.", tags:["superhero","comedy","family"]},
+  {id:34, title:"Kumbalangi Nights", lang:"Malayalam", genre:"Drama", year:2019, director:"Madhu C. Narayanan", cast:"Fahadh Faasil, Shane Nigam", poster:"posters/kumbalangi.jpg", video:"videos/kumbalangi.mp4", desc:"Four estranged brothers on a sleepy Kerala island slowly mend their bonds of family while confronting a dangerous outsider.", tags:["drama","family","feel-good"]},
+  {id:35, title:"Bahubali 2 The Conclusion", lang:"Telugu", genre:"Adventure", year:2017, director:"S.S. Rajamouli", cast:"Prabhas, Rana Daggubati, Anushka Shetty", poster:"posters/bahubali2.jpg", video:"videos/bahubali2.mp4", desc:"The breathtaking conclusion to the Bahubali saga — a king's great betrayal is finally revealed and justice is gloriously served.", tags:["action","fantasy","epic"]},
+  {id:36, title:"Shrek", lang:"English", genre:"Animation", year:2001, director:"Andrew Adamson, Vicky Jenson", cast:"Mike Myers, Eddie Murphy", poster:"posters/shrek.jpg", video:"videos/shrek.mp4", desc:"A grumpy green ogre and a cheerful talking donkey go on an unexpected quest to rescue a princess from a fire-breathing dragon.", tags:["animation","comedy","adventure"]},
+  {id:37, title:"Kiki's Delivery Service", lang:"English", genre:"Animation", year:1989, director:"Hayao Miyazaki", cast:"Kirsten Dunst, Phil Hartman", poster:"posters/kiki.jpg", video:"videos/kiki.mp4", desc:"A young witch moves to a new city and uses her flying broomstick to start a delivery service, learning independence along the way.", tags:["animation","fantasy","family"]},
+  {id:38, title:"Super Deluxe", lang:"Tamil", genre:"Drama", year:2019, director:"Thiagarajan Kumararaja", cast:"Vijay Sethupathi, Fahadh Faasil", poster:"posters/superdeluxe.jpg", video:"videos/superdeluxe.mp4", desc:"Four unrelated storylines collide in a single extraordinary day, weaving together a profound story about fate and second chances.", tags:["drama","thriller","mystery"]},
+  {id:39, title:"Pushpa The Rise", lang:"Telugu", genre:"Action", year:2021, director:"Sukumar", cast:"Allu Arjun, Rashmika Mandanna", poster:"posters/pushpa.jpg", video:"videos/pushpa.mp4", desc:"A courageous man rises through the ranks of a smuggling operation using nothing but raw grit and clever thinking.", tags:["action","drama","powerful"]},
+  {id:40, title:"Dangal Girls", lang:"Hindi", genre:"Sports", year:2016, director:"Nitesh Tiwari", cast:"Aamir Khan, Fatima Sana Shaikh, Sanya Malhotra", poster:"posters/dangalgirls.jpg", video:"videos/dangalgirls.mp4", desc:"Two sisters defy every expectation to become champion wrestlers, proving that determination and hard work can conquer anything.", tags:["sports","family","inspiration"]}
+];
+
+// ============================================================
+// STATE
+// ============================================================
+var totalUsers = 1;
+var usersData = {};
+var userOrder = [];
+var currentSetupIndex = 0;
+var currentUser = null;
+var feedbackPhase = false;
+var heroMovies = [];
+var heroIndex = 0;
+var heroTimer = null;
+
+// ============================================================
+// SLIDER
+// ============================================================
+function updateSlider(el) {
+  var v = parseInt(el.value);
+  document.getElementById('sliderVal').textContent = v;
+  var pct = ((v - 1) / 9 * 100).toFixed(1);
+  el.style.background = 'linear-gradient(to right,var(--red) 0%,var(--red) ' + pct + '%,#333 ' + pct + '%,#333 100%)';
+}
+
+function startSetup() {
+  totalUsers = parseInt(document.getElementById('userCountSlider').value);
+  showScreen('accountScreen');
+  renderAccountForm();
+}
+
+// ============================================================
+// ACCOUNT CREATION
+// ============================================================
+function renderAccountForm() {
+  var idx = currentSetupIndex;
+  var btnLabel = (idx < totalUsers - 1) ? 'Create Account &amp; Next &rarr;' : 'Create Account &amp; Start!';
+  document.getElementById('accountFormInner').innerHTML =
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:28px;">' +
+      '<div style="width:40px;height:40px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0;">' + (idx + 1) + '</div>' +
+      '<div><h2 style="font-size:22px;font-weight:800;">User ' + (idx + 1) + '\'s Account</h2>' +
+      '<p style="color:var(--muted);font-size:13px;">Create your Netwatch profile</p></div>' +
+    '</div>' +
+    '<div id="accError" class="error-box"></div>' +
+    '<input id="accUser" type="text" placeholder="Choose a username" class="field" style="margin-bottom:14px;"/>' +
+    '<input id="accPass" type="password" placeholder="Create a password (required)" class="field" style="margin-bottom:14px;"/>' +
+    '<input id="accPass2" type="password" placeholder="Confirm your password" class="field" style="margin-bottom:28px;" onkeydown="if(event.key===\'Enter\')createAccount()"/>' +
+    '<button class="btn-red" onclick="createAccount()" style="width:100%;padding:16px;font-size:16px;">' + btnLabel + '</button>';
+  renderProgress();
+}
+
+function renderProgress() {
+  var el = document.getElementById('accountProgress');
+  el.innerHTML = '';
+  for (var i = 0; i < totalUsers; i++) {
+    var done = i < currentSetupIndex;
+    var active = i === currentSetupIndex;
+    var w = active ? '32px' : '12px';
+    var bg = done ? '#4CAF50' : (active ? 'var(--red)' : '#333');
+    el.innerHTML += '<div style="width:' + w + ';height:12px;border-radius:6px;background:' + bg + ';transition:all .4s;"></div>';
+  }
+}
+
+function createAccount() {
+  var u = document.getElementById('accUser').value.trim();
+  var p = document.getElementById('accPass').value;
+  var p2 = document.getElementById('accPass2').value;
+  var err = document.getElementById('accError');
+  function showErr(msg) { err.textContent = msg; err.style.display = 'block'; }
+  err.style.display = 'none';
+  if (!u) { showErr('Please choose a username.'); return; }
+  if (!p) { showErr('A password is required to create your account!'); return; }
+  if (p.length < 4) { showErr('Password must be at least 4 characters.'); return; }
+  if (p !== p2) { showErr('Passwords do not match. Please try again.'); return; }
+  if (usersData[u]) { showErr('That username is already taken! Choose another.'); return; }
+  usersData[u] = { password: p, feedbackGiven: [], feedbackMap: {}, myList: [] };
+  userOrder.push(u);
+  currentSetupIndex++;
+  if (currentSetupIndex >= totalUsers) {
+    feedbackPhase = true;
+    goToLogin();
+  } else {
+    renderAccountForm();
+  }
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+function goToLogin() {
+  hideAllPopups();
+  showScreen('loginScreen');
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  var sub = document.getElementById('loginSubtitle');
+  if (feedbackPhase) {
+    var next = getNextFeedbackUser();
+    if (next) {
+      sub.textContent = 'Welcome, ' + next + '! Sign in to rate your movies.';
+      document.getElementById('loginUser').value = next;
+    } else {
+      sub.textContent = 'All feedback collected! Sign in to see your personalised recommendations.';
+    }
+  } else {
+    sub.textContent = 'Sign in to see your AI-powered recommendations!';
+  }
+}
+
+function getNextFeedbackUser() {
+  for (var i = 0; i < userOrder.length; i++) {
+    if (usersData[userOrder[i]].feedbackGiven.length < 20) return userOrder[i];
+  }
+  return null;
+}
+
+function doLogin() {
+  var u = document.getElementById('loginUser').value.trim();
+  var p = document.getElementById('loginPass').value;
+  var err = document.getElementById('loginError');
+  if (!u) { err.textContent = 'Please enter your username.'; err.style.display = 'block'; return; }
+  if (!p) { err.textContent = 'Please enter your password.'; err.style.display = 'block'; return; }
+  if (!usersData[u]) { err.textContent = 'Username not found. Check your spelling!'; err.style.display = 'block'; return; }
+  if (usersData[u].password !== p) { err.textContent = 'Incorrect password. Try again!'; err.style.display = 'block'; return; }
+  currentUser = u;
+  document.getElementById('loginPass').value = '';
+  err.style.display = 'none';
+  showScreen('mainApp');
+  loadApp();
+}
+
+// ============================================================
+// MAIN APP
+// ============================================================
+function loadApp() {
+  document.getElementById('navUsername').textContent = currentUser;
+  document.getElementById('navAvatar').textContent = currentUser[0].toUpperCase();
+  var userData = usersData[currentUser];
+  if (feedbackPhase && userData.feedbackGiven.length < 20) {
+    showSection('discover');
+    renderDiscoverSection();
+  } else {
+    showSection('home');
+    renderHome();
+  }
+}
+
+function showSection(name) {
+  var sections = ['homeSection', 'discoverSection', 'mylistSection', 'moviesSection'];
+  for (var i = 0; i < sections.length; i++) {
+    document.getElementById(sections[i]).style.display = 'none';
+  }
+  if (name === 'home') { document.getElementById('homeSection').style.display = 'block'; }
+  if (name === 'discover') { document.getElementById('discoverSection').style.display = 'block'; }
+  if (name === 'mylist') { document.getElementById('mylistSection').style.display = 'block'; renderMyList(); }
+  if (name === 'movies') { document.getElementById('moviesSection').style.display = 'block'; renderMoviesSection(); }
+}
+
+function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+// ============================================================
+// DISCOVER / FEEDBACK
+// ============================================================
+function renderDiscoverSection() {
+  var userData = usersData[currentUser];
+  var assigned = getAssignedMovies(currentUser);
+  var rated = userData.feedbackGiven.length;
+  var sub = document.getElementById('discoverSubtitle');
+  sub.innerHTML = '<strong style="color:#fff;">' + currentUser + '</strong>, click each movie to watch a preview then tap &nbsp;&#128077;&nbsp; or &nbsp;&#128078;&nbsp; to rate it. Netwatch AI will learn your taste! &nbsp;<span style="background:rgba(229,9,20,.2);color:var(--red);padding:4px 12px;border-radius:20px;font-weight:700;font-size:13px;">' + rated + '/20 rated</span>';
+  var grid = document.getElementById('discoverGrid');
+  grid.innerHTML = '';
+  for (var i = 0; i < assigned.length; i++) {
+    var m = assigned[i];
+    var fb = userData.feedbackMap[m.id];
+    var isRated = (fb !== undefined);
+    grid.appendChild(buildMovieCard(m, true, fb, isRated, ''));
+  }
+}
+
+function getAssignedMovies(username) {
+  var idx = userOrder.indexOf(username);
+  var shuffled = shuffleWithSeed(ALL_MOVIES, idx * 137 + 42);
+  return shuffled.slice(0, 20);
+}
+
+function shuffleWithSeed(arr, seed) {
+  var a = arr.slice();
+  var s = seed;
+  function rand() {
+    s = (s * 1664525 + 1013904223) & 0xFFFFFFFF;
+    return ((s >>> 0) / 0xFFFFFFFF);
+  }
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(rand() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+// ============================================================
+// HOME / RECOMMENDATIONS
+// ============================================================
+function renderHome() {
+  var userData = usersData[currentUser];
+  var likedIds = [];
+  for (var id in userData.feedbackMap) {
+    if (userData.feedbackMap[id] === true) likedIds.push(parseInt(id));
+  }
+  var likedMovies = ALL_MOVIES.filter(function(m) { return likedIds.indexOf(m.id) > -1; });
+  var likedGenres = {}, likedLangs = {}, likedTags = {};
+  likedMovies.forEach(function(m) {
+    likedGenres[m.genre] = (likedGenres[m.genre] || 0) + 2;
+    likedLangs[m.lang] = (likedLangs[m.lang] || 0) + 1;
+    m.tags.forEach(function(t) { likedTags[t] = (likedTags[t] || 0) + 1; });
+  });
+  var feedbackIds = getAssignedMovies(currentUser).map(function(m) { return m.id; });
+  var candidates = ALL_MOVIES.filter(function(m) { return feedbackIds.indexOf(m.id) === -1; });
+  var scored = candidates.map(function(m) {
+    var score = 0;
+    score += (likedGenres[m.genre] || 0) * 3;
+    score += (likedLangs[m.lang] || 0) * 1.5;
+    m.tags.forEach(function(t) { score += (likedTags[t] || 0) * 2; });
+    return { m: m, score: score };
+  });
+  scored.sort(function(a, b) { return b.score - a.score; });
+  var recs = scored.slice(0, 10).map(function(s) {
+    return Object.assign({}, s.m, { _score: s.score, _reason: buildReason(s.m, likedGenres, likedLangs, likedTags) });
+  });
+  var others = scored.slice(10).map(function(s) { return s.m; });
+  heroMovies = recs.slice(0, 5).length > 0 ? recs.slice(0, 5) : ALL_MOVIES.slice(0, 5);
+  heroIndex = 0;
+  renderHero();
+  var recGrid = document.getElementById('recGrid');
+  recGrid.innerHTML = '';
+  recs.forEach(function(m) { recGrid.appendChild(buildMovieCard(m, false, null, false, m._reason)); });
+  if (others.length > 0) {
+    document.getElementById('allMoviesSection').style.display = 'block';
+    var ag = document.getElementById('allMoviesGrid');
+    ag.innerHTML = '';
+    others.slice(0, 20).forEach(function(m) { ag.appendChild(buildMovieCard(m, false, null, false, '')); });
+  }
+}
+
+function buildReason(m, likedGenres, likedLangs, likedTags) {
+  var reasons = [];
+  if ((likedGenres[m.genre] || 0) >= 2) reasons.push('You loved ' + m.genre + ' movies');
+  if ((likedLangs[m.lang] || 0) >= 2) reasons.push('You enjoy ' + m.lang + ' films');
+  var topTag = null;
+  for (var i = 0; i < m.tags.length; i++) {
+    if ((likedTags[m.tags[i]] || 0) >= 2) { topTag = m.tags[i]; break; }
+  }
+  if (topTag) reasons.push("You're a fan of " + topTag + " stories");
+  if (reasons.length === 0) reasons.push('Based on your unique taste profile');
+  return '\uD83E\uDD16 AI says: ' + reasons[0] + '!';
+}
+
+// ============================================================
+// HERO
+// ============================================================
+function renderHero() {
+  if (!heroMovies.length) return;
+  clearInterval(heroTimer);
+  var m = heroMovies[heroIndex];
+  // SLIDES
+  var slides = document.getElementById('heroSlides');
+  slides.innerHTML = '';
+  var img = document.createElement('img');
+  img.src = m.poster;
+  img.alt = m.title;
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s;';
+  img.onload = function() { this.style.opacity = '1'; };
+  img.onerror = function() {
+    this.style.display = 'none';
+    slides.style.background = 'linear-gradient(135deg,#1a0000,#2a0505)';
+  };
+  slides.appendChild(img);
+  // CONTENT
+  var content = document.getElementById('heroContent');
+  content.innerHTML = '';
+  content.style.animation = 'none';
+  void content.offsetWidth;
+  content.style.animation = 'fadeInUp .8s ease';
+  // badges
+  var badgeRow = document.createElement('div');
+  badgeRow.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;';
+  badgeRow.innerHTML =
+    '<span style="background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:4px;text-transform:uppercase;letter-spacing:1px;">' + m.lang + '</span>' +
+    '<span style="background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:4px;">' + m.genre + '</span>' +
+    '<span style="background:rgba(255,255,255,.1);color:#ccc;font-size:11px;padding:4px 12px;border-radius:4px;">' + m.year + '</span>';
+  content.appendChild(badgeRow);
+  // title
+  var title = document.createElement('h2');
+  title.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:clamp(36px,5vw,64px);line-height:1;margin-bottom:16px;text-shadow:2px 2px 20px rgba(0,0,0,.8);';
+  title.textContent = m.title;
+  content.appendChild(title);
+  // AI reason
+  if (m._reason) {
+    var reasonBox = document.createElement('div');
+    reasonBox.style.cssText = 'background:rgba(229,9,20,.2);border:1px solid rgba(229,9,20,.4);border-radius:8px;padding:10px 16px;margin-bottom:14px;font-size:13px;color:#ffb3b3;font-weight:600;';
+    reasonBox.textContent = m._reason;
+    content.appendChild(reasonBox);
+  }
+  // desc
+  var desc = document.createElement('p');
+  desc.style.cssText = 'font-size:14px;color:#ccc;line-height:1.7;margin-bottom:24px;max-width:440px;';
+  desc.textContent = m.desc;
+  content.appendChild(desc);
+  // buttons
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:14px;flex-wrap:wrap;';
+  var playBtn = document.createElement('button');
+  playBtn.style.cssText = 'display:flex;align-items:center;gap:8px;background:#fff;color:#000;border:none;padding:14px 28px;border-radius:8px;font-family:"Nunito",sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;';
+  playBtn.innerHTML = '&#9654; Play';
+  playBtn.onmouseover = function() { this.style.background = '#e0e0e0'; };
+  playBtn.onmouseout = function() { this.style.background = '#fff'; };
+  playBtn.onclick = (function(id) { return function() { openModal(id); }; })(m.id);
+  var listBtn = document.createElement('button');
+  listBtn.style.cssText = 'display:flex;align-items:center;gap:8px;background:rgba(109,109,110,.7);color:#fff;border:none;padding:14px 28px;border-radius:8px;font-family:"Nunito",sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;';
+  listBtn.textContent = '+ My List';
+  listBtn.onmouseover = function() { this.style.background = 'rgba(109,109,110,1)'; };
+  listBtn.onmouseout = function() { this.style.background = 'rgba(109,109,110,.7)'; };
+  listBtn.onclick = (function(id) { return function() { addToList(id); }; })(m.id);
+  btnRow.appendChild(playBtn);
+  btnRow.appendChild(listBtn);
+  content.appendChild(btnRow);
+  // DOTS
+  var dots = document.getElementById('heroDots');
+  dots.innerHTML = '';
+  for (var i = 0; i < heroMovies.length; i++) {
+    var dot = document.createElement('div');
+    dot.className = 'hero-dot';
+    dot.style.width = (i === heroIndex) ? '28px' : '10px';
+    dot.style.background = (i === heroIndex) ? 'var(--red)' : 'rgba(255,255,255,.35)';
+    dot.onclick = (function(idx) { return function() { setHero(idx); }; })(i);
+    dots.appendChild(dot);
+  }
+  heroTimer = setInterval(function() { changeHero(1); }, 6000);
+}
+
+function changeHero(dir) {
+  heroIndex = (heroIndex + dir + heroMovies.length) % heroMovies.length;
+  renderHero();
+}
+function setHero(i) { heroIndex = i; renderHero(); }
+
+// ============================================================
+// MOVIE CARD BUILDER (DOM — no nested template literals)
+// ============================================================
+function buildMovieCard(m, isFeedback, feedbackVal, isRated, reason) {
+  var liked = (feedbackVal === true);
+  var disliked = (feedbackVal === false);
+
+  var card = document.createElement('div');
+  card.className = 'movie-card';
+
+  // --- POSTER AREA ---
+  var posterDiv = document.createElement('div');
+  posterDiv.className = 'card-poster';
+  posterDiv.onclick = (function(id) { return function() { openModal(id); }; })(m.id);
+
+  var img = document.createElement('img');
+  img.src = m.poster;
+  img.alt = m.title;
+  img.loading = 'lazy';
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;';
+  img.onerror = (function(title, parent) {
+    return function() {
+      this.style.display = 'none';
+      var fb = document.createElement('div');
+      fb.className = 'poster-fallback';
+      var txt = document.createElement('p');
+      txt.style.cssText = 'font-size:12px;font-weight:700;color:#555;';
+      txt.textContent = title;
+      fb.appendChild(txt);
+      parent.appendChild(fb);
+    };
+  })(m.title, posterDiv);
+  posterDiv.appendChild(img);
+
+  // Overlay on hover
+  var overlay = document.createElement('div');
+  overlay.className = 'card-overlay';
+  overlay.innerHTML =
+    '<p style="font-size:11px;color:#fff;font-weight:700;margin-bottom:8px;line-height:1.4;">' + m.title + '</p>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">' +
+      '<span style="background:var(--red);font-size:9px;padding:2px 7px;border-radius:3px;font-weight:700;">' + m.genre + '</span>' +
+      '<span style="background:rgba(255,255,255,.2);font-size:9px;padding:2px 7px;border-radius:3px;">' + m.lang + '</span>' +
+    '</div>' +
+    (reason ? '<p style="font-size:10px;color:#ffb3b3;line-height:1.4;margin-bottom:6px;">' + reason + '</p>' : '');
+  var watchBtn = document.createElement('button');
+  watchBtn.style.cssText = 'width:100%;background:var(--red);color:#fff;border:none;padding:8px;border-radius:6px;font-family:"Nunito",sans-serif;font-size:11px;font-weight:700;cursor:pointer;';
+  watchBtn.textContent = '\u25B6 Watch Now';
+  watchBtn.onclick = (function(id) { return function(e) { e.stopPropagation(); openModal(id); }; })(m.id);
+  overlay.appendChild(watchBtn);
+  posterDiv.appendChild(overlay);
+
+  // Feedback badge
+  if (isFeedback && isRated) {
+    var badge = document.createElement('div');
+    badge.className = 'fb-badge';
+    badge.style.background = liked ? '#4CAF50' : '#f44336';
+    badge.textContent = liked ? '\uD83D\uDC4D' : '\uD83D\uDC4E';
+    posterDiv.appendChild(badge);
+  }
+
+  card.appendChild(posterDiv);
+
+  // --- FEEDBACK BUTTONS ---
+  if (isFeedback) {
+    var fbRow = document.createElement('div');
+    fbRow.className = 'fb-buttons';
+
+    var likeBtn = document.createElement('button');
+    likeBtn.className = 'fb-btn';
+    likeBtn.textContent = '\uD83D\uDC4D';
+    likeBtn.style.borderColor = liked ? '#4CAF50' : '#333';
+    likeBtn.style.background = liked ? 'rgba(76,175,80,.2)' : 'transparent';
+    likeBtn.style.color = liked ? '#4CAF50' : '#999';
+    likeBtn.onmouseover = function() { this.style.borderColor = '#4CAF50'; this.style.color = '#4CAF50'; };
+    likeBtn.onmouseout = function() {
+      var isL = (usersData[currentUser].feedbackMap[m.id] === true);
+      this.style.borderColor = isL ? '#4CAF50' : '#333';
+      this.style.color = isL ? '#4CAF50' : '#999';
+    };
+    likeBtn.onclick = (function(id) { return function() { giveFeedback(id, true); }; })(m.id);
+
+    var dislikeBtn = document.createElement('button');
+    dislikeBtn.className = 'fb-btn';
+    dislikeBtn.textContent = '\uD83D\uDC4E';
+    dislikeBtn.style.borderColor = disliked ? '#f44336' : '#333';
+    dislikeBtn.style.background = disliked ? 'rgba(244,67,54,.2)' : 'transparent';
+    dislikeBtn.style.color = disliked ? '#f44336' : '#999';
+    dislikeBtn.onmouseover = function() { this.style.borderColor = '#f44336'; this.style.color = '#f44336'; };
+    dislikeBtn.onmouseout = function() {
+      var isD = (usersData[currentUser].feedbackMap[m.id] === false);
+      this.style.borderColor = isD ? '#f44336' : '#333';
+      this.style.color = isD ? '#f44336' : '#999';
+    };
+    dislikeBtn.onclick = (function(id) { return function() { giveFeedback(id, false); }; })(m.id);
+
+    fbRow.appendChild(likeBtn);
+    fbRow.appendChild(dislikeBtn);
+    card.appendChild(fbRow);
+  }
+
+  // --- CARD INFO (non-feedback) ---
+  if (!isFeedback) {
+    var info = document.createElement('div');
+    info.className = 'card-info';
+    info.innerHTML =
+      '<p style="font-size:12px;font-weight:700;color:#e5e5e5;line-height:1.3;margin-bottom:4px;">' + m.title + '</p>' +
+      '<p style="font-size:11px;color:#666;">' + m.year + ' \u00B7 ' + m.lang + '</p>' +
+      (reason ? '<p style="font-size:10px;color:#ff8a80;margin-top:4px;line-height:1.4;">' + reason + '</p>' : '');
+    card.appendChild(info);
+  }
+
+  return card;
+}
+
+// ============================================================
+// FEEDBACK
+// ============================================================
+function giveFeedback(movieId, liked) {
+  var userData = usersData[currentUser];
+  var wasRated = (userData.feedbackMap[movieId] !== undefined);
+  userData.feedbackMap[movieId] = liked;
+  if (!wasRated) userData.feedbackGiven.push(movieId);
+  var rated = userData.feedbackGiven.length;
+  if (rated >= 20) {
+    var allDone = true;
+    for (var i = 0; i < userOrder.length; i++) {
+      if (usersData[userOrder[i]].feedbackGiven.length < 20) { allDone = false; break; }
+    }
+    if (allDone) {
+      feedbackPhase = false;
+      showPopup('allDonePopup');
+    } else {
+      showNextUserPopup();
+    }
+  } else {
+    renderDiscoverSection();
+  }
+}
+
+function showNextUserPopup() {
+  var nextUser = getNextFeedbackUser();
+  document.getElementById('nextUserTitle').textContent = currentUser + ' is done! \uD83C\uDF89';
+  document.getElementById('nextUserMsg').textContent = 'Great job, ' + currentUser + '! You\'ve rated all 20 movies. Now it\'s ' + nextUser + '\'s turn. Hand the device over to ' + nextUser + '!';
+  document.getElementById('nextUserBtn').textContent = nextUser + '\'s Turn \u2192';
+  showPopup('nextUserPopup');
+}
+
+function goNextUser() {
+  hideAllPopups();
+  doLogout(true);
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(movieId) {
+  var m = ALL_MOVIES.find(function(x) { return x.id === movieId; });
+  if (!m) return;
+  var userData = usersData[currentUser];
+  var isFeedback = feedbackPhase && userData.feedbackGiven.length < 20;
+  var fb = userData.feedbackMap[m.id];
+
+  var mc = document.getElementById('modalContent');
+  mc.innerHTML = '';
+
+  // --- VIDEO AREA ---
+  var videoArea = document.createElement('div');
+  videoArea.style.cssText = 'position:relative;background:#000;aspect-ratio:16/9;max-height:480px;overflow:hidden;';
+
+  var bgImg = document.createElement('img');
+  bgImg.src = m.poster;
+  bgImg.alt = m.title;
+  bgImg.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:.5;';
+  bgImg.onerror = function() { this.style.display = 'none'; };
+  videoArea.appendChild(bgImg);
+
+  var playOverlay = document.createElement('div');
+  playOverlay.id = 'playOverlay_' + m.id;
+  playOverlay.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;';
+  var playBig = document.createElement('button');
+  playBig.style.cssText = 'width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.9);border:none;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 4px 20px rgba(0,0,0,.5);';
+  playBig.innerHTML = '&#9654;';
+  playBig.onmouseover = function() { this.style.background = '#fff'; this.style.transform = 'scale(1.1)'; };
+  playBig.onmouseout = function() { this.style.background = 'rgba(255,255,255,.9)'; this.style.transform = 'none'; };
+  playBig.onclick = (function(id) { return function() { playVideo(id); }; })(m.id);
+  var playLabel = document.createElement('p');
+  playLabel.style.cssText = 'color:rgba(255,255,255,.7);font-size:13px;';
+  playLabel.textContent = 'Click to play';
+  playOverlay.appendChild(playBig);
+  playOverlay.appendChild(playLabel);
+  videoArea.appendChild(playOverlay);
+
+  var videoContainer = document.createElement('div');
+  videoContainer.id = 'videoContainer_' + m.id;
+  videoContainer.style.cssText = 'display:none;position:absolute;inset:0;';
+  var videoEl = document.createElement('video');
+  videoEl.id = 'video_' + m.id;
+  videoEl.src = m.video;
+  videoEl.controls = true;
+  videoEl.style.cssText = 'width:100%;height:100%;background:#000;';
+  videoEl.onerror = (function(videoPath, container) {
+    return function() {
+      container.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#111;padding:20px;text-align:center;"><p style="color:#555;font-size:14px;">Add your video file here:<br><span style=\'color:#888;font-size:12px;\'>' + videoPath + '</span></p></div>';
+    };
+  })(m.video, videoContainer);
+  videoContainer.appendChild(videoEl);
+  videoArea.appendChild(videoContainer);
+  mc.appendChild(videoArea);
+
+  // --- DETAILS AREA ---
+  var details = document.createElement('div');
+  details.style.cssText = 'padding:30px;';
+
+  var topRow = document.createElement('div');
+  topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px;margin-bottom:20px;';
+
+  var leftCol = document.createElement('div');
+  leftCol.innerHTML =
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">' +
+      '<span style="background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:4px;">' + m.lang + '</span>' +
+      '<span style="background:#333;color:#ccc;font-size:11px;padding:4px 12px;border-radius:4px;">' + m.genre + '</span>' +
+      '<span style="background:#333;color:#ccc;font-size:11px;padding:4px 12px;border-radius:4px;">' + m.year + '</span>' +
+    '</div>' +
+    '<h2 style="font-family:\'Bebas Neue\',sans-serif;font-size:clamp(28px,4vw,42px);letter-spacing:1px;margin-bottom:8px;">' + m.title + '</h2>' +
+    '<p style="color:#aaa;font-size:13px;margin-bottom:4px;"><span style="color:#666;">Director:</span> ' + m.director + '</p>' +
+    '<p style="color:#aaa;font-size:13px;"><span style="color:#666;">Cast:</span> ' + m.cast + '</p>';
+
+  var rightCol = document.createElement('div');
+  rightCol.style.cssText = 'display:flex;gap:10px;flex-shrink:0;';
+  var addListBtn = document.createElement('button');
+  addListBtn.style.cssText = 'background:#333;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-family:"Nunito",sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;';
+  addListBtn.textContent = '+ My List';
+  addListBtn.onmouseover = function() { this.style.background = '#444'; };
+  addListBtn.onmouseout = function() { this.style.background = '#333'; };
+  addListBtn.onclick = (function(id) { return function() { addToList(id); }; })(m.id);
+  rightCol.appendChild(addListBtn);
+
+  topRow.appendChild(leftCol);
+  topRow.appendChild(rightCol);
+  details.appendChild(topRow);
+
+  var descP = document.createElement('p');
+  descP.style.cssText = 'font-size:15px;color:#ccc;line-height:1.8;margin-bottom:24px;';
+  descP.textContent = m.desc;
+  details.appendChild(descP);
+
+  // Feedback section in modal
+  if (isFeedback) {
+    var fbBox = document.createElement('div');
+    fbBox.style.cssText = 'background:rgba(229,9,20,.08);border:1px solid rgba(229,9,20,.25);border-radius:12px;padding:20px;margin-top:20px;';
+    var fbTitle = document.createElement('p');
+    fbTitle.style.cssText = 'font-size:14px;font-weight:700;margin-bottom:16px;color:#fff;';
+    fbTitle.textContent = '\uD83D\uDCCA What do you think of this movie?';
+    fbBox.appendChild(fbTitle);
+    var fbBtns = document.createElement('div');
+    fbBtns.style.cssText = 'display:flex;gap:14px;';
+
+    var mLikeBtn = document.createElement('button');
+    mLikeBtn.style.cssText = 'flex:1;padding:14px;border:2px solid ' + (fb === true ? '#4CAF50' : '#444') + ';background:' + (fb === true ? 'rgba(76,175,80,.2)' : 'rgba(76,175,80,.05)') + ';color:' + (fb === true ? '#4CAF50' : '#aaa') + ';border-radius:10px;cursor:pointer;font-family:"Nunito",sans-serif;font-size:15px;font-weight:700;transition:all .2s;';
+    mLikeBtn.textContent = '\uD83D\uDC4D I Like It!';
+    mLikeBtn.onclick = (function(id) { return function() { giveFeedback(id, true); closeModal(); }; })(m.id);
+
+    var mDislikeBtn = document.createElement('button');
+    mDislikeBtn.style.cssText = 'flex:1;padding:14px;border:2px solid ' + (fb === false ? '#f44336' : '#444') + ';background:' + (fb === false ? 'rgba(244,67,54,.2)' : 'rgba(244,67,54,.05)') + ';color:' + (fb === false ? '#f44336' : '#aaa') + ';border-radius:10px;cursor:pointer;font-family:"Nunito",sans-serif;font-size:15px;font-weight:700;transition:all .2s;';
+    mDislikeBtn.textContent = '\uD83D\uDC4E Not For Me';
+    mDislikeBtn.onclick = (function(id) { return function() { giveFeedback(id, false); closeModal(); }; })(m.id);
+
+    fbBtns.appendChild(mLikeBtn);
+    fbBtns.appendChild(mDislikeBtn);
+    fbBox.appendChild(fbBtns);
+    var fbHint = document.createElement('p');
+    fbHint.style.cssText = 'font-size:12px;color:#666;margin-top:12px;text-align:center;';
+    fbHint.textContent = 'Your feedback helps Netwatch AI learn your taste \u2014 just like real streaming services!';
+    fbBox.appendChild(fbHint);
+    details.appendChild(fbBox);
+  }
+
+  mc.appendChild(details);
+  document.getElementById('movieModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function playVideo(id) {
+  var overlay = document.getElementById('playOverlay_' + id);
+  var container = document.getElementById('videoContainer_' + id);
+  var vid = document.getElementById('video_' + id);
+  if (overlay) overlay.style.display = 'none';
+  if (container) container.style.display = 'block';
+  if (vid) vid.play();
+}
+
+function closeModal() {
+  document.getElementById('movieModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ============================================================
+// MY LIST
+// ============================================================
+function addToList(movieId) {
+  var userData = usersData[currentUser];
+  if (userData.myList.indexOf(movieId) === -1) {
+    userData.myList.push(movieId);
+    showToast('Added to My List! \u2713');
+  } else {
+    showToast('Already in your list!');
+  }
+}
+
+function renderMyList() {
+  var userData = usersData[currentUser];
+  var grid = document.getElementById('mylistGrid');
+  var empty = document.getElementById('mylistEmpty');
+  grid.innerHTML = '';
+  if (!userData.myList.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  userData.myList.forEach(function(id) {
+    var m = ALL_MOVIES.find(function(x) { return x.id === id; });
+    if (m) grid.appendChild(buildMovieCard(m, false, null, false, ''));
+  });
+}
+
+function renderMoviesSection() {
+  var grid = document.getElementById('moviesGrid');
+  grid.innerHTML = '';
+  ALL_MOVIES.forEach(function(m) { grid.appendChild(buildMovieCard(m, false, null, false, '')); });
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:opacity .3s;';
+  document.body.appendChild(t);
+  setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 300); }, 2000);
+}
+
+// ============================================================
+// LOGOUT
+// ============================================================
+function doLogout(silent) {
+  currentUser = null;
+  clearInterval(heroTimer);
+  showScreen('loginScreen');
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  if (feedbackPhase) {
+    var next = getNextFeedbackUser();
+    var sub = document.getElementById('loginSubtitle');
+    if (next) sub.textContent = 'Next up: ' + next + '! Sign in to rate your movies.';
+    else sub.textContent = 'All done! Sign in to see your recommendations.';
+  } else {
+    document.getElementById('loginSubtitle').textContent = 'Sign in to see your AI-powered recommendations!';
+  }
+}
+
+// ============================================================
+// SCREEN & POPUP HELPERS
+// ============================================================
+function showScreen(id) {
+  var screens = ['setupScreen', 'accountScreen', 'loginScreen', 'mainApp'];
+  for (var i = 0; i < screens.length; i++) {
+    var el = document.getElementById(screens[i]);
+    if (!el) continue;
+    if (screens[i] === id) {
+      el.style.display = (screens[i] === 'mainApp') ? 'block' : 'flex';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+}
+
+function showPopup(id) {
+  document.getElementById(id).style.display = 'flex';
+}
+
+function hideAllPopups() {
+  document.getElementById('nextUserPopup').style.display = 'none';
+  document.getElementById('allDonePopup').style.display = 'none';
+}
+
+// ============================================================
+// NAVBAR SCROLL
+// ============================================================
+window.addEventListener('scroll', function() {
+  var nav = document.getElementById('navbar');
+  if (nav) nav.style.background = window.scrollY > 50 ? 'rgba(0,0,0,.98)' : 'linear-gradient(to bottom,rgba(0,0,0,.95),transparent)';
+});
+
+// MODAL BACKDROP CLICK
+document.getElementById('movieModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// INIT
+showScreen('setupScreen');
+</script>
+</body>
+</html>
