@@ -87,15 +87,6 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2);}
 .wishlist-card::before{content:'';position:absolute;inset:0;border-radius:14px;border:1.5px solid rgba(255,215,0,.28);z-index:5;pointer-events:none;transition:border-color .3s;}
 .wishlist-card:hover::before{border-color:rgba(255,215,0,.65);}
 
-/* AI DESCRIPTION CARD */
-.ai-desc-card{background:linear-gradient(135deg,rgba(229,9,20,.06),rgba(74,144,226,.04));border:1px solid rgba(229,9,20,.18);border-radius:14px;padding:14px 16px;margin-top:8px;font-size:12px;color:#c0b8c8;line-height:1.65;position:relative;}
-.ai-desc-card::before{content:'🤖 NetWatch AI';position:absolute;top:-10px;left:12px;background:#0d0d0d;padding:2px 8px;font-size:10px;font-weight:800;color:var(--red);letter-spacing:1px;border:1px solid rgba(229,9,20,.3);border-radius:20px;}
-.ai-desc-glow{animation:glow 3s ease-in-out infinite;}
-
-/* WEEK 4 SPECIAL BANNER */
-.week4-banner{background:linear-gradient(135deg,rgba(255,107,43,.15),rgba(229,9,20,.08),rgba(74,144,226,.1));border:1px solid rgba(255,107,43,.3);border-radius:16px;padding:18px 24px;margin:0 5% 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-@keyframes week4Pulse{0%,100%{box-shadow:0 0 0 transparent;}50%{box-shadow:0 0 30px rgba(255,107,43,.3);}}
-
 /* HERO */
 #heroSection{position:relative;height:100vh;overflow:hidden;background:#000;}
 #heroSlides{position:absolute;inset:0;}
@@ -365,18 +356,14 @@ footer{background:#080808;border-top:1px solid #1a1a1a;padding:60px 5% 40px;}
       <div id="wishlistRecGrid" class="movie-grid"></div>
     </div>
 
-    <!-- CROSS-USER (Week 4 only) — dynamically rendered into this container -->
-    <div id="crossUserSection" style="display:none;"></div>
-
-    <!-- LANGUAGE RECS (Week 4 only) -->
-    <div id="langRecsSection" style="display:none;" class="section-row">
+    <!-- CROSS-USER (Week 4 only) -->
+    <div id="crossUserSection" style="display:none;" class="section-row">
       <div class="section-header">
-        <div class="section-bar" style="height:28px;background:var(--teal);"></div>
-        <h2 style="font-size:22px;font-weight:800;">🌍 Picks in Your Languages</h2>
-        <span style="background:rgba(29,185,84,.12);color:var(--teal);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(29,185,84,.28);">Language AI</span>
+        <div class="section-bar" style="height:28px;background:var(--blue);"></div>
+        <h2 style="font-size:22px;font-weight:800;" id="crossUserTitle">👥 Friends Also Loved</h2>
+        <span style="background:rgba(74,144,226,.13);color:var(--blue);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(74,144,226,.3);">Cross-User AI</span>
       </div>
-      <p style="color:var(--muted);font-size:13px;margin:-10px 0 20px;line-height:1.6;">Based on your language preferences across all weeks of training data</p>
-      <div id="langRecsGrid" class="movie-grid"></div>
+      <div id="crossUserGrid" class="movie-grid"></div>
     </div>
 
     <!-- TOP 10 INDIA MOVIES -->
@@ -627,9 +614,7 @@ var ALL_LANGS  = ["Telugu","Tamil","Hindi","Kannada","Malayalam","English"];
 // STATE
 // ============================================================
 var totalUsers = 1;
-var usersData  = {};  // { username: { password, myList, weekData:{1..4:{feedbackMap,feedbackGiven}}, genres:[], langs:[], currentWeek:1, weekDone:{1..3:false}, isFirstLogin:true } }
-// ALL_MOVIES flexible schema: { id, title, type, lang, genre, year, director, cast, poster, video, desc, tags[], rating? }
-// You can extend any movie object with extra fields like: rating:"U/A", studio:"...", seasons:3, etc.
+var usersData  = {};  // { username: { password, myList, weekData:{1:{feedbackMap,feedbackGiven},2:{...},3:{...}}, genres:[], langs:[], currentWeek:1, weekDone:{1:false,2:false,3:false}, isFirstLogin:true } }
 var userOrder  = [];
 var currentSetupIndex = 0;
 var currentUser = null;
@@ -701,8 +686,7 @@ function createAccount() {
     weekData:{
       1:{feedbackMap:{},feedbackGiven:[]},
       2:{feedbackMap:{},feedbackGiven:[]},
-      3:{feedbackMap:{},feedbackGiven:[]},
-      4:{feedbackMap:{},feedbackGiven:[]}
+      3:{feedbackMap:{},feedbackGiven:[]}
     }
   };
   userOrder.push(u);
@@ -1038,24 +1022,20 @@ function renderMyTop10(likedIds) {
 }
 
 function getUpdatedTop10Movies() {
-  // Top 10 based on ALL users' feedback across all weeks — enjoyed=+3, average=+1, notmytype=-2
+  // Update top 10 based on all users' enjoyed feedback
   var scores = {};
   userOrder.forEach(function(u){
-    for(var w=1;w<=4;w++){
-      if(!usersData[u].weekData[w]) continue;
+    for(var w=1;w<=3;w++){
       for(var id in usersData[u].weekData[w].feedbackMap){
-        var fb=usersData[u].weekData[w].feedbackMap[id];
-        if(fb==='enjoyed') scores[id]=(scores[id]||0)+3;
-        else if(fb==='average') scores[id]=(scores[id]||0)+1;
-        else if(fb==='notmytype') scores[id]=(scores[id]||0)-2;
+        if(usersData[u].weekData[w].feedbackMap[id]==='enjoyed'){
+          scores[id]=(scores[id]||0)+3;
+        } else if(usersData[u].weekData[w].feedbackMap[id]==='average'){
+          scores[id]=(scores[id]||0)+1;
+        }
       }
     }
   });
-  // Filter to movies only, sort by net score
-  var movieIds = ALL_MOVIES.filter(function(m){return m.type==='movie';}).map(function(m){return m.id;});
-  var sorted = Object.keys(scores)
-    .filter(function(id){return movieIds.indexOf(parseInt(id))>-1;})
-    .sort(function(a,b){return scores[b]-scores[a];});
+  var sorted = Object.keys(scores).sort(function(a,b){return scores[b]-scores[a];});
   var result = sorted.slice(0,10).map(Number);
   if(result.length<10){
     TOP10_MOVIES_INDIA.forEach(function(id){ if(result.indexOf(id)===-1 && result.length<10) result.push(id); });
@@ -1063,77 +1043,14 @@ function getUpdatedTop10Movies() {
   return result;
 }
 
-function getUpdatedTop10Shows() {
-  // Same logic for TV shows
-  var scores = {};
-  userOrder.forEach(function(u){
-    for(var w=1;w<=4;w++){
-      if(!usersData[u].weekData[w]) continue;
-      for(var id in usersData[u].weekData[w].feedbackMap){
-        var fb=usersData[u].weekData[w].feedbackMap[id];
-        if(fb==='enjoyed') scores[id]=(scores[id]||0)+3;
-        else if(fb==='average') scores[id]=(scores[id]||0)+1;
-        else if(fb==='notmytype') scores[id]=(scores[id]||0)-2;
-      }
-    }
-  });
-  var showIds = ALL_MOVIES.filter(function(m){return m.type==='tv';}).map(function(m){return m.id;});
-  var sorted = Object.keys(scores)
-    .filter(function(id){return showIds.indexOf(parseInt(id))>-1;})
-    .sort(function(a,b){return scores[b]-scores[a];});
-  var result = sorted.slice(0,10).map(Number);
-  if(result.length<10){
-    TOP10_SHOWS_INDIA.forEach(function(id){ if(result.indexOf(id)===-1 && result.length<10) result.push(id); });
-  }
-  return result;
-}
-
-function buildReason(m,lG,lL,lT,context) {
-  // context: 'interest'|'cross'|'lang'|'enjoyed'|'wishlist'|'w4personal'
-  var reasons=[];
-  var genreScore=(lG[m.genre]||0);
-  var langScore=(lL[m.lang]||0);
-  var topTag=null;
-  for(var i=0;i<m.tags.length;i++){if((lT[m.tags[i]]||0)>=2){topTag=m.tags[i];break;}}
-  if(genreScore>=4) reasons.push('You consistently enjoy '+m.genre+' content');
-  else if(genreScore>=2) reasons.push('Your ratings show a strong '+m.genre+' preference');
-  if(langScore>=3) reasons.push('You watch a lot of '+m.lang+' titles');
-  else if(langScore>=1) reasons.push(m.lang+' is in your preferred languages');
-  if(topTag) reasons.push("You have a pattern of enjoying '"+topTag+"' themed stories");
-  if(m.year>=2018) reasons.push('This is a recent, highly-rated release');
-  if(reasons.length===0) reasons.push('This matches your evolving taste profile across all weeks');
-  // Build short AI-style sentence
-  var main=reasons[0];
-  var extra=reasons.length>1?' · '+reasons[1]:'';
-  return '🤖 '+main+extra+'!';
-}
-
-function buildAIDescription(m,lG,lL,lT,context,extraContext) {
-  // Full paragraph AI recommendation reason shown below the card
-  var lines=[];
-  var genreScore=(lG[m.genre]||0);
-  var langScore=(lL[m.lang]||0);
-  var matchedTags=m.tags.filter(function(t){return (lT[t]||0)>=1;});
-  if(context==='cross' && extraContext){
-    lines.push(extraContext.otherUser+' enjoyed this, and your taste profiles are '+Math.round(extraContext.matchPct)+'% aligned across genres, languages, and viewing patterns.');
-    if(matchedTags.length>0) lines.push('You both enjoy '+matchedTags.slice(0,2).join(' and ')+' themed content.');
-    lines.push('NetWatch AI predicts you\'ll rate this highly based on your shared preferences in '+m.genre+'.');
-  } else if(context==='lang'){
-    lines.push(m.lang+' content makes up a significant part of your viewing history and preferences.');
-    if(genreScore>=2) lines.push('Combined with your love of '+m.genre+', this is a strong match for your taste.');
-    lines.push('NetWatch AI selected this from your preferred language pool for Week 4.');
-  } else if(context==='w4personal'){
-    if(genreScore>=3) lines.push('Across all 3 weeks of training, '+m.genre+' has consistently scored highest in your liked content.');
-    if(langScore>=2) lines.push('Your '+m.lang+' preferences are reinforced by multiple weeks of feedback.');
-    if(matchedTags.length>0) lines.push('The theme of "'+matchedTags[0]+'" appears repeatedly in your enjoyed titles.');
-    lines.push('With full data from Weeks 1–3, NetWatch AI has high confidence in this recommendation.');
-  } else {
-    if(genreScore>=2) lines.push('Your feedback data shows strong affinity for '+m.genre+' content.');
-    if(matchedTags.length>0) lines.push('Themes like "'+matchedTags[0]+'" align with titles you\'ve previously enjoyed.');
-    if(langScore>=1) lines.push(m.lang+' is among your active language preferences.');
-  }
-  if(lines.length===0) lines.push('NetWatch AI identified this as a strong candidate based on your overall taste profile.');
-  return lines.join(' ');
+function buildReason(m,lG,lL,lT) {
+  var r=[];
+  if((lG[m.genre]||0)>=2)r.push('You love '+m.genre+' content');
+  if((lL[m.lang]||0)>=2)r.push('You enjoy '+m.lang+' shows');
+  var topTag=null; for(var i=0;i<m.tags.length;i++) if((lT[m.tags[i]]||0)>=2){topTag=m.tags[i];break;}
+  if(topTag)r.push("You're a fan of "+topTag+' stories');
+  if(r.length===0)r.push('Based on your taste profile');
+  return '\uD83E\uDD16 '+r[0]+'!';
 }
 
 // WISHLIST RECS
@@ -1160,164 +1077,43 @@ function renderWishlistRecs(lG,lL,lT,excludeIds) {
   });
 }
 
-// CROSS-USER RECS (Week 4) — Shared-movie bridge logic
-// If User1 and User2 both enjoyed Movie A, and User2 also enjoyed Movie B (same genre),
-// but User1 hasn't watched Movie B → recommend Movie B to User1 as "Username enjoyed it"
+// CROSS-USER RECS (Week 4)
 function renderCrossUserRecs(myLG,myLL,myLT,excludeIds) {
-  var container = document.getElementById('crossUserSection');
-  container.innerHTML=''; container.style.display='none';
-  if(userOrder.length<2) return;
-
-  // Build current user's enjoyed set (all weeks)
-  var myEnjoyedIds=[];
-  for(var w=1;w<=4;w++){
-    if(!usersData[currentUser].weekData[w])continue;
-    for(var id in usersData[currentUser].weekData[w].feedbackMap){
-      if(usersData[currentUser].weekData[w].feedbackMap[id]==='enjoyed') myEnjoyedIds.push(parseInt(id));
-    }
-  }
-
-  // Score each other user by overlap with current user's enjoyed titles
-  var userScores=[];
+  if(userOrder.length<2){document.getElementById('crossUserSection').style.display='none';return;}
+  var similarUsers=[];
   userOrder.forEach(function(u){
     if(u===currentUser)return;
-    var otherEnjoyedIds=[];
-    for(var wk=1;wk<=4;wk++){
-      if(!usersData[u].weekData[wk])continue;
-      for(var eid in usersData[u].weekData[wk].feedbackMap){
-        if(usersData[u].weekData[wk].feedbackMap[eid]==='enjoyed') otherEnjoyedIds.push(parseInt(eid));
+    var score=0;
+    for(var w=1;w<=3;w++){
+      for(var id in usersData[u].weekData[w].feedbackMap){
+        if(usersData[u].weekData[w].feedbackMap[id]!=='enjoyed')continue;
+        var m=ALL_MOVIES.find(function(x){return x.id===parseInt(id);});
+        if(!m)continue; score+=(myLG[m.genre]||0)*2+(myLL[m.lang]||0);
+        m.tags.forEach(function(t){score+=(myLT[t]||0);});
       }
     }
-    // Count shared enjoyed titles (Movie A overlap)
-    var shared=myEnjoyedIds.filter(function(id){return otherEnjoyedIds.indexOf(id)>-1;});
-    // Compute genre/tag overlap score
-    var genreScore=0;
-    otherEnjoyedIds.forEach(function(eid){
-      var em=ALL_MOVIES.find(function(x){return x.id===eid;});
-      if(!em)return;
-      genreScore+=(myLG[em.genre]||0)*2+(myLL[em.lang]||0);
-      em.tags.forEach(function(t){genreScore+=(myLT[t]||0);});
-    });
-    var totalScore=shared.length*5+genreScore;
-    var maxPossible=Math.max(myEnjoyedIds.length,1)*5+(otherEnjoyedIds.length*3);
-    var matchPct=Math.min(Math.round((totalScore/Math.max(maxPossible,1))*100),98);
-    userScores.push({name:u, sharedIds:shared, otherEnjoyedIds:otherEnjoyedIds, score:totalScore, matchPct:matchPct});
+    similarUsers.push({name:u,score:score});
   });
-  userScores.sort(function(a,b){return b.score-a.score;});
-
-  // For each similar user, apply bridge logic:
-  // Find movies they enjoyed with same genre as a SHARED movie, that current user hasn't rated
-  var sectionsRendered=0;
-  userScores.slice(0,3).forEach(function(usr){
-    if(usr.score<=0) return;
-    // Get genres from shared titles (Movie A genres)
-    var sharedGenres={};
-    usr.sharedIds.forEach(function(sid){
-      var sm=ALL_MOVIES.find(function(x){return x.id===sid;});
-      if(sm) sharedGenres[sm.genre]=(sharedGenres[sm.genre]||[]).concat([sm]);
-    });
-    // Find new picks: movies usr enjoyed, same genre as a shared movie, not in current user's watched set
-    var bridgePicks=[];
-    usr.otherEnjoyedIds.forEach(function(eid){
-      if(excludeIds.indexOf(eid)>-1) return; // already seen by current user
-      if(myEnjoyedIds.indexOf(eid)>-1) return; // already enjoyed
-      var em=ALL_MOVIES.find(function(x){return x.id===eid;});
-      if(!em) return;
-      // Check if this movie's genre matches a shared movie's genre (the bridge)
-      var sharedMoviesInGenre=sharedGenres[em.genre];
-      if(!sharedMoviesInGenre||sharedMoviesInGenre.length===0) return;
-      bridgePicks.push({
-        m: em,
-        sharedTitle: sharedMoviesInGenre[0].title
-      });
-    });
-    // Also include any enjoyed titles from usr that match current user's genre prefs (fallback)
-    if(bridgePicks.length<4){
-      usr.otherEnjoyedIds.forEach(function(eid){
-        if(bridgePicks.some(function(p){return p.m.id===eid;})) return;
-        if(excludeIds.indexOf(eid)>-1) return;
-        if(myEnjoyedIds.indexOf(eid)>-1) return;
-        var em=ALL_MOVIES.find(function(x){return x.id===eid;});
-        if(!em) return;
-        if((myLG[em.genre]||0)>=1) bridgePicks.push({m:em, sharedTitle:null});
-      });
-    }
-    if(bridgePicks.length===0) return;
-    bridgePicks=bridgePicks.slice(0,8);
-
-    // Build section HTML
-    var sec=document.createElement('div'); sec.className='section-row'; sec.style.cssText='padding-top:30px;';
-    var headerHtml='<div class="section-header">'+
-      '<div class="section-bar" style="height:28px;background:var(--blue);flex-shrink:0;border-radius:2px;width:4px;"></div>'+
-      '<h2 style="font-size:22px;font-weight:800;">👤 <span style="color:var(--blue);">'+usr.name+'</span> Enjoyed These</h2>'+
-      '<span style="background:rgba(74,144,226,.13);color:var(--blue);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(74,144,226,.3);">'+usr.matchPct+'% Taste Match</span>'+
-      '</div>'+
-      '<p style="color:var(--muted);font-size:13px;margin:-10px 0 20px;line-height:1.6;">You and '+usr.name+' both enjoyed similar content — these are titles '+usr.name+' loved that you haven\'t seen yet.</p>';
-    sec.innerHTML=headerHtml;
-    var grid=document.createElement('div'); grid.className='movie-grid';
-    bridgePicks.forEach(function(pick){
-      var bridgeNote=pick.sharedTitle
-        ? '👤 '+usr.name+' enjoyed it · because you both loved "'+pick.sharedTitle+'"'
-        : '👤 '+usr.name+' enjoyed it · matches your '+pick.m.genre+' taste';
-      var aiDesc=buildAIDescription(pick.m,myLG,myLL,myLT,'cross',{otherUser:usr.name,matchPct:usr.matchPct});
-      var card=buildMovieCard(pick.m,false,null,false,bridgeNote,aiDesc);
-      card.classList.add('cross-user-card');
-      grid.appendChild(card);
-    });
-    sec.appendChild(grid);
-    container.appendChild(sec);
-    sectionsRendered++;
-  });
-
-  if(sectionsRendered>0) container.style.display='block';
-}
-
-// LANGUAGE-BASED RECS (Week 4) — uses all weeks' data for language affinity
-function renderWeek4LangRecs(lG,lL,lT,allRatedIds) {
-  var ud=usersData[currentUser];
-  // Build language affinity scores from all weeks of feedback + profile prefs
-  var langAffinityScores={};
-  if(ud.langs) ud.langs.forEach(function(l){ langAffinityScores[l]=(langAffinityScores[l]||0)+3; });
-  for(var wk=1;wk<=3;wk++){
-    for(var id in ud.weekData[wk].feedbackMap){
-      var fb=ud.weekData[wk].feedbackMap[id];
-      var m=ALL_MOVIES.find(function(x){return x.id===parseInt(id);});
-      if(!m)continue;
-      if(fb==='enjoyed') langAffinityScores[m.lang]=(langAffinityScores[m.lang]||0)+2;
-      else if(fb==='average') langAffinityScores[m.lang]=(langAffinityScores[m.lang]||0)+0.5;
-      else if(fb==='notmytype') langAffinityScores[m.lang]=(langAffinityScores[m.lang]||0)-1;
-    }
-  }
-  // Sort languages by affinity
-  var topLangs=Object.keys(langAffinityScores)
-    .filter(function(l){return (langAffinityScores[l]||0)>0;})
-    .sort(function(a,b){return langAffinityScores[b]-langAffinityScores[a];})
-    .slice(0,3);
-  if(topLangs.length===0){document.getElementById('langRecsSection').style.display='none';return;}
-
+  similarUsers.sort(function(a,b){return b.score-a.score;});
+  var bestUser=similarUsers.length>0?similarUsers[0]:null;
+  if(!bestUser){document.getElementById('crossUserSection').style.display='none';return;}
   var picks=[];
-  topLangs.forEach(function(lang){
-    var langPicks=ALL_MOVIES.filter(function(m){
-      return m.lang===lang && allRatedIds.indexOf(m.id)===-1;
-    }).map(function(m){
-      var s=(lG[m.genre]||0)*3+(lT[m.tags[0]]||0)*2;
-      return{m:m,s:s,lang:lang};
-    }).sort(function(a,b){return b.s-a.s;}).slice(0,4);
-    picks=picks.concat(langPicks);
-  });
-  picks=picks.slice(0,12);
-  if(!picks.length){document.getElementById('langRecsSection').style.display='none';return;}
-
-  document.getElementById('langRecsSection').style.display='block';
-  var g=document.getElementById('langRecsGrid'); g.innerHTML='';
-  var wData4=ud.weekData[4]||ud.weekData[3];
-  picks.forEach(function(pick){
-    var langScore=langAffinityScores[pick.lang]||0;
-    var reason='🌍 Strong '+pick.lang+' affinity (score: '+Math.round(langScore)+')';
-    var aiDesc=buildAIDescription(pick.m,lG,lL,lT,'lang',null);
-    var card=buildMovieCard(pick.m,true,wData4.feedbackMap[pick.m.id],wData4.feedbackMap[pick.m.id]!==undefined,reason,aiDesc);
-    g.appendChild(card);
-  });
+  for(var w=1;w<=3;w++){
+    for(var id in usersData[bestUser.name].weekData[w].feedbackMap){
+      if(usersData[bestUser.name].weekData[w].feedbackMap[id]!=='enjoyed')continue;
+      var mid=parseInt(id);
+      if(excludeIds.indexOf(mid)>-1)continue;
+      var m=ALL_MOVIES.find(function(x){return x.id===mid;});
+      if(m) picks.push(Object.assign({},m,{_reason:'\uD83D\uDC65 '+bestUser.name+' loved this!'}));
+      if(picks.length>=8)break;
+    }
+    if(picks.length>=8)break;
+  }
+  if(!picks.length){document.getElementById('crossUserSection').style.display='none';return;}
+  document.getElementById('crossUserSection').style.display='block';
+  document.getElementById('crossUserTitle').innerHTML='&#128101; Because <span style="color:var(--blue);">'+bestUser.name+'</span> Loved These';
+  var g=document.getElementById('crossUserGrid'); g.innerHTML='';
+  picks.forEach(function(m){var card=buildMovieCard(m,false,null,false,m._reason);card.classList.add('cross-user-card');g.appendChild(card);});
 }
 
 // TOP 10
@@ -1394,7 +1190,7 @@ function setHero(i){heroIndex=i;renderHero();}
 // ============================================================
 // MOVIE CARD BUILDER
 // ============================================================
-function buildMovieCard(m,isFeedback,feedbackVal,isRated,reason,aiDesc){
+function buildMovieCard(m,isFeedback,feedbackVal,isRated,reason){
   var card=document.createElement('div'); card.className='movie-card';
   var pd=document.createElement('div'); pd.className='card-poster';
   pd.onclick=(function(id){return function(){openModal(id);};})(m.id);
@@ -1491,12 +1287,8 @@ function buildMovieCard(m,isFeedback,feedbackVal,isRated,reason,aiDesc){
   if(!isFeedback){
     var info=document.createElement('div'); info.className='card-info';
     info.innerHTML='<p style="font-size:12px;font-weight:700;color:#e5e5e5;line-height:1.3;margin-bottom:4px;">'+m.title+'</p>'+
-      '<p style="font-size:11px;color:#666;">'+m.year+' · '+m.lang+(m.type==='tv'?' · TV':(m.type==='documentary'?' · DOC':''))+(m.rating?' · '+m.rating:'')+'</p>'+
+      '<p style="font-size:11px;color:#666;">'+m.year+' · '+m.lang+(m.type==='tv'?' · TV':(m.type==='documentary'?' · DOC':''))+'</p>'+
       (reason?'<p style="font-size:10px;color:#ff8a80;margin-top:4px;line-height:1.4;">'+reason+'</p>':'');
-    if(aiDesc){
-      var ad=document.createElement('div'); ad.className='ai-desc-card';
-      ad.textContent=aiDesc; info.appendChild(ad);
-    }
     card.appendChild(info);
   }
   return card;
